@@ -1,0 +1,137 @@
+
+20.- Instalación de docker
+
+sudo dnf install -y dnf-utils zip unzip
+
+sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+sudo dnf remove -y runc
+
+sudo dnf install -y docker-ce docker-ce-cli containerd.io --nobest
+
+sudo systemctl enable docker.service
+
+sudo systemctl start docker.service
+
+systemctl status docker.service
+
+sudo usermod -aG docker $USER && newgrp docker
+
+docker info
+
+docker service
+
+21.- Image vs containerd
+
+docker run --name mongo -d mongo
+
+docker top mongo
+
+ps aux 
+
+docker stop mongo
+
+ps aux
+
+docker container run --publish 80:80 nginx
+
+  * abrir el navegador y verificar que en localhost esté en ejecución 
+  * Ctrl-c para terminar la ejecución
+
+docker container run --publish 80:80 --detach nginx
+
+docker container ls 
+
+docker container stop nginx
+
+docker container ls -a
+
+docker container run --publish 80:80 --detach --name webserver nginx
+
+docker container ls -a
+
+  * notar los distintos contenedores ( instancias ) en estado Up o Exit
+
+docker container logs webserver
+
+  * muestra los logs (registro de eventos) de un contenedor
+
+docker container ls -a
+
+docker container rm 4f8 78d 23a
+  * utilizar los primeros 3 digitos del Image ID en el listado de contenedores
+
+docker container rm -f 23a
+  * -f para forzar la detención del contenedor antes de borrarlo
+
+22.- Detalles de la ejecucón de contenedor
+
+docker container run -d --name nginx nginx
+
+docker container run -d --name mysql -e MYSQL_RANDOM_ROOT_PASSWORD=true mysql
+
+docker container top  nginx
+
+docker container inspect mysql
+
+docker container stats
+
+  * notar los recursos que utilizan los contenedores
+
+24.- Analizar los contendores listados en la dirección hub.docker.com usando el navegador
+
+25.- Las capas de una imágen de docker
+
+docker history nginx:latest
+
+docker history mysql 
+
+docker image inspect nginx
+
+  * crear una cuenta en docker.com 
+
+docker image tag nginx USUARIODOCKER/nginx
+
+docker image push USUARIODOCKER/nginx
+
+docker login
+
+cat ./docker/config.json
+  * muestra la configuración del usuario registrado en docker.com que se graba en la carpeta .docker del directorio de usuario
+
+docker image push USUARIODOCKER/nginx
+
+docker image tag USUARIODOCKER/nxingx USUARIODOCKER/nginx:test
+
+docker image push USUARIODOCKER/nginx:test
+
+  * revisar en la pagina hub.docker.com que al loguearse en la pagina existan las imageness taggeadas
+
+26.- Crear Dokerfile
+
+git pull http://github.com/linuxsapiens/curso_kubernetes.git
+
+cd curso_kubernetes/docker
+
+docker image build -t customnginx .
+
+  * editar el archivo para agregar el puerto 8080 en EXPOSE 80 443
+
+docker image ls 
+
+docker image build -t customnginx .
+
+  * notar que se tarda mucho menos, por que utiliza las capas que no cambiaron en la anterior construcción de imagen 
+
+cd ..
+cd second
+
+  * revisar el archivo Dockerfile y el archivo index.html
+
+docker image build -t nginx-with-html .
+docker container run -p 80:80 --rm nginx-with-html
+  * abrir en el navegador http://localhost para confirmar que funciona
+
+docker image tag nginx-with-html USUARIODOCKER/nginx-with-html
+docker image push USUARIODOCKER/nginx-with-html
+

@@ -1,4 +1,8 @@
 
+El número de agrupa los comandos, se refiere al número de diapositiva en la presentación
+El número no es consecutivo ya que en algunas diapositivas, no se usaron comandos.
+
+
 20.- Instalación de docker
 
 sudo dnf install -y dnf-utils zip unzip
@@ -134,4 +138,80 @@ docker container run -p 80:80 --rm nginx-with-html
 
 docker image tag nginx-with-html USUARIODOCKER/nginx-with-html
 docker image push USUARIODOCKER/nginx-with-html
+
+28.- Docker volumes
+
+docker pull mysql
+
+docker inspect mysql 
+
+docker container run -d --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD mysql
+
+docker container ls
+
+docker inspect mysql 
+  * Buscar la session "Mounts"
+
+docker volume ls
+
+docker volume inspect <ID_VOLUME>
+
+docker container run -d --name mysql2 -e MYSQL_ALLOW_EMPTY_PASSWORD mysql 
+
+docker volume ls
+
+docker container stop mysql mysql2
+
+docker container ls 
+
+docker volume ls
+
+docker container run -d --name mysql3 -e MYSQL_ALLOW_EMPTY_PASSWORD -v mysql-db:/var/lib/mysql mysql 
+
+docker volume ls 
+
+docker container stop mysql3
+
+docker container run -d --name mysql4 -e MYSQL_ALLOW_EMPTY_PASSWORD -v mysql-db:/var/lib/mysql mysql 
+
+docker inspect mysql4 
+
+29.- Docker - Bind
+
+cd curso_kubernetes/second
+
+cat Dockerfile
+
+docker container run -d --name nginx -p 80:80 -v $(pwd):/usr/share/nginx/html nginx
+
+  * abrir un navegador para ver que si está funcionando 
+
+docker container run -d --name nginx2 -p 8080:80 nginx
+
+  * abrir una segunda terminal
+docker container exec -it nginx bash
+  * conecta con el contenedor 
+
+#cd /usr/share/nginx/html
+#ls -al
+
+  * en la primer terminar ( host ) ejecutar lo siguiente: 
+touch test.txt
+
+  * en la segunda terminar ( container ) ejecutar de nuevo ls 
+#ls -al
+#exit
+
+docker container stop nginx nginx2
+
+30.- Docker-compose
+
+  * install docker compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+docker-compose --version 
 

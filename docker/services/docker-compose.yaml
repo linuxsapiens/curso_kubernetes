@@ -1,0 +1,129 @@
+version: '3'
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    volumes:
+      - /home/gera/rabbitmq/etc/definitions.json:/etc/rabbitmq/definitions.json
+      - /home/gera/rabbitmq/etc/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - /home/gera/rabbitmq/etc/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - /home/gera/rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@backend.plain4.com
+      - /home/gera/rabbitmq/logs:/var/log/rabbitmq.log
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 1883:1883
+    networks:
+      - backend-network
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    hostname: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secreto
+      - POSTGRES_DB=plain4_prod
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    hostname: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@plain4.com
+      - PGADMIN_DEFAULT_PASSWORD=secreto
+      - PGADMIN_LISTEN_PORT=5050
+    ports:
+      - 5050:5050
+
+  backend_prod:
+    build:
+      context: /home/gera/fortesitio/backend/core
+      dockerfile: Dockerfile.new
+    image: backend_prod
+    container_name: backend_prod
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - backend-root:/app/dist
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend-network
+
+  frontend_prod:
+    build:
+      context: /home/gera/fortesitio/frontend/dashboard
+      dockerfile: Dockerfile.ssl
+    environment:
+      - REACT_APP_API_URL=https://app.plain4.com/api
+    image: frontend_prod
+    container_name: frontend_prod
+    restart: unless-stopped
+    ports:
+      - 5000:5000
+    volumes:
+      - web-root:/app/build
+    depends_on:
+      - backend_prod
+    networks:
+      - plain4-network
+
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - web-root:/var/www/html
+      - backend-root:/var/www/api
+      - ./nginx-conf:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
+    depends_on:
+      - backend_prod
+      - frontend_prod
+    networks:
+      - plain4-network
+      - backend-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes: 
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - webserver
+    command: certonly --webroot --webroot-path=/var/www/html --email lgjaramillo@gmail.com --agree-tos --no-eff-email --force-renewal -d app.plain4.com
+
+volumes:
+  pgdata:
+    driver: local
+  certbot-etc:
+  certbot-var:
+  web-root:
+  backend-root:
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/gera/fortesitio/dhparam/
+      o: bind
+
+networks:
+  plain4-network:
+    driver: bridge
+  backend-network:
+    driver: bridge

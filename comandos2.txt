@@ -215,3 +215,161 @@ sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 docker-compose --version 
 
+33.- k8s Objects
+
+  * instalar kubectl
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+sudo yum install -y kubectl
+
+  * Instalar minikube
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-latest.x86_64.rpm
+
+sudo rpm -Uvh minikube-latest.x86_64.rpm
+
+minikube start --driver=docker
+
+minikube status
+
+kubectl get nodes
+
+  * Minikube Demo
+
+kubectl create deployment hello-minikube --image=k8s.gcr.io/echoserver:1.10
+
+kubectl get deployments
+
+kubectl expose deployment hello-minikube --type=NodePort --port=8080
+
+minikube service hello-minikube --url
+
+curl http://192.168.49.2:31522
+
+kubectl delete services hello-minikube
+
+kubectl delete deployment hello-minikube
+
+kubectl get pods
+
+34.- Demo PODs
+
+kubectl run nginx --image=nginx
+
+kubectl get pods
+
+kubectl describe pod nginx
+
+kubectl get pods -o wide
+
+kubectl delete pod nginx
+
+35.- YAML in kubernetes
+
+  * instalar VSCode y agregar la extensión kubernetes by RedHat
+
+  * editar un archivo llamado pos-definition.yml con el siguiente contenido
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    type: front-end
+spec:
+  containers:
+    - name: nginx-container
+    - image: nginx
+
+kubectl create -f ./pod-definition.yml
+
+kubectl describe pod myapp-pod
+
+kubectl describe pos myapp-pod | grep -i image
+
+kubectl delete pod myapp-pod
+
+
+kubectl run redis --image=redis123 --dry-run=client -o yaml > pod.yaml
+
+kubectl apply -f pod.yaml
+
+kubectl edit pod redis   
+  * ( corregir el nombre de la imagen )
+
+kubectl get pods 
+  * ( comprobar vea que ya se puede instanciar redis ) 
+
+36.- Replication controllers & ReplicaSet
+
+  * Crear el archivo rc-definition.yml
+
+kubectl create -f rc-definition.yml
+
+kubectl get replicationcontroller
+
+kubectl get pods
+
+kubectl delete replicationcontroller myapp-rc
+
+  * Crear el archivo replicaset-definition.yml
+
+kubectl create -f replicaset-definition.yml
+
+  * para escalar la cantidad de replicas se puede editar el archivo y luego aplicar
+
+kubectl replace -f replicaset-definition.yml
+
+  * otra forma es con el comando 
+
+kubectl scale --replicas=6 -f replicaset-definition.yml
+
+kubectl scale --replicas=7 replicaset myapp-replicaset
+
+  * borrar un pod usando su nombre especifico
+kubectl delete pod myapp-replicaset-46n9h
+
+kubectl get pods
+
+kubectl describe replicaset myapp-replicaset
+
+37.- deployment
+
+  * crear el archivo de deployment-definition.yml
+
+kubectl create -f deployment-definition.yml
+
+kubectl get deployments
+
+kubectl get replicaset 
+
+kubectl get pods
+
+kubectl get all
+
+38.- Deployment Strategy 
+
+kubectl create -f deployment-definition.yml
+
+kubectl get deployments
+
+kubectl apply -f deployment-definition.yml 
+
+kubectl set image deployment/myapp-deployment nginx=nginx:1.21
+
+kubectl rollout status deployment/myapp-deployment
+
+kubectl rollout history deployment/myapp-deployment
+
+kubectl rollout undo deployment/myapp-deployment
+

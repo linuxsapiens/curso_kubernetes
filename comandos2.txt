@@ -141,6 +141,14 @@ docker image push USUARIODOCKER/nginx-with-html
 
 28.- Docker volumes
 
+  * Eliminar todos los contenedores, incluyendo los que no se estén ejecutando
+docker container ls -abrir
+
+docker container rm mysql mysql2 mysql3 mysql4 nginx
+
+  * si alguno no pudiera eliminar por estar en ejecución, forzarlo usando -f
+  docker container rm -f mysql 
+
 docker pull mysql
 
 docker inspect mysql 
@@ -156,7 +164,7 @@ docker volume ls
 
 docker volume inspect <ID_VOLUME>
 
-docker container run -d --name mysql2 -e MYSQL_ALLOW_EMPTY_PASSWORD mysql 
+docker container run -d --name mysql2 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql 
 
 docker volume ls
 
@@ -172,7 +180,7 @@ docker volume ls
 
 docker container stop mysql3
 
-docker container run -d --name mysql4 -e MYSQL_ALLOW_EMPTY_PASSWORD -v mysql-db:/var/lib/mysql mysql 
+docker container run -d --name mysql4 -e MYSQL_ALLOW_EMPTY_PASSWORD=true -v mysql-db:/var/lib/mysql mysql 
 
 docker inspect mysql4 
 
@@ -219,7 +227,7 @@ docker-compose --version
 
   * instalar kubectl
 
-cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+sudo cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
 baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
@@ -295,7 +303,7 @@ kubectl create -f ./pod-definition.yml
 
 kubectl describe pod myapp-pod
 
-kubectl describe pos myapp-pod | grep -i image
+kubectl describe pod myapp-pod | grep -i image
 
 kubectl delete pod myapp-pod
 
@@ -357,7 +365,7 @@ kubectl get pods
 
 kubectl get all
 
-38.- Deployment Strategy 
+39.- Deployment Strategy 
 
 kubectl create -f deployment-definition.yml
 
@@ -372,4 +380,55 @@ kubectl rollout status deployment/myapp-deployment
 kubectl rollout history deployment/myapp-deployment
 
 kubectl rollout undo deployment/myapp-deployment
+
+42.- Namespace
+
+kubectl get pods
+
+kubectl get pods --namespace=kube-system
+
+kubectl create -f pod.yaml
+
+kubectl create -f namespace-dev.yml
+
+kubectl create namespace prod
+
+kubectl create -f pod.yaml --namespace=dev
+  * también es posible especificar el namespace en el archivo yaml, dentro de la sección metadata: namespace: dev
+
+kubectl get pods
+kubectl get pods --namespace=dev
+kubectl get pods --namespace=prod
+
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+
+kubectl get pods
+kubectl get pods --namespace=default
+kubectl get pods --namespace=prod
+
+kubectl get pods --all-namespaces
+
+43.- Namespace
+
+  * Revisar el archivo compute-quota.yml
+
+47.- Service - NodePort
+
+  * Crear el archivo service-definition.yml
+
+kubectl get svc
+
+minikube service myapp-service --url
+
+48.- Service - ClusterIP
+
+  * Se crea el archivo service-definition2.yml
+
+kubectl crearte -f service-definition3.yml 
+
+kubectl get services
+
+49.- Service - LoadBalancer
+
+  * Revisar el archivo service-definition3.yml
 
